@@ -1,0 +1,3 @@
+[submodule "quarkus-simple"]
+	path = quarkus-simple
+	url = git@github.com:mkralik3/quarkus-simple.git
