@@ -1,14 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
 import { useNavigate, useParams } from "react-router-dom";
+import BlogForm from "../components/Form";
 import Loading from "../components/Loading";
 import useFetch2 from "../hooks/useFetch2";
 
 const Update = () => {
-    const titleRef = useRef()
-    const bodyRef = useRef()
-    const authorRef = useRef()
-
     const { id } = useParams()
     const navigate = useNavigate();
     const { data: blog, executeFetch, error, isPending } = useFetch2('http://localhost:8000/blogs/' + id);
@@ -18,9 +15,9 @@ const Update = () => {
         executeFetch();
     }, [executeFetch])
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e, formBlogTitle, formBlogBody, formBlogAuthor) => {
         e.preventDefault()
-        const updatedBlog = { title: titleRef.current.value, body: bodyRef.current.value, author: authorRef.current.value, id: blog.id }
+        const updatedBlog = { title: formBlogTitle.current.value, body: formBlogBody.current.value, author: formBlogAuthor.current.value, id: blog.id }
         await executeFetch({
             method: 'PUT',
             headers: { "Content-Type": "application/json" },
@@ -36,41 +33,7 @@ const Update = () => {
             {error && <div>{error}</div>}
             {isPending && <Loading />}
             {blog && (
-                <div className="custom-form">
-                    <h2>Update blog</h2>
-                    <form onSubmit={handleSubmit}>
-                        <label>Blog title:</label>
-                        <input
-                            type="text"
-                            required
-                            ref={titleRef}
-                            defaultValue={blog.title}
-                        // value={title}
-                        // onChange={(e) => setTitle(e.target.value)}
-
-                        />
-                        <label>Blog body:</label>
-                        <textarea
-                            type="text"
-                            required
-                            ref={bodyRef}
-                            defaultValue={blog.body}
-                        // value={body}
-                        // onChange={(e) => setBody(e.target.value)}
-                        />
-                        <label>Blog author:</label>
-                        <select
-                            defaultValue={blog.author}
-                            ref={authorRef}
-                        // onChange={(e) => setAuthor(e.target.value)}
-                        >
-                            <option value="mario">mario</option>
-                            <option value="yoshi">yoshi</option>
-                        </select>
-                        {!isPending && <button>Update blog</button>}
-                        {isPending && <button disabled>Updating blog...</button>}
-                    </form>
-                </div>
+                <BlogForm title={blog.title} body={blog.body} author={blog.author} method="Update" submitHandler={handleSubmit} isPending={isPending} />
             )}
         </div >
     );
