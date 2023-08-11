@@ -1,11 +1,16 @@
-import { useRef } from "react";
+import { useState } from "react";
+
 import Loading from "../components/Loading";
 
-
 const BlogForm = ({ title = "", body = "", author = "", submitHandler, method, isPending }) => {
-    const formBlogTitle = useRef()
-    const formBlogBody = useRef()
-    const formBlogAuthor = useRef()
+
+    const [formBlogTitle, setFormBlogTitle] = useState(title);
+    const [formBlogBody, setFormBlogBody] = useState(body);
+    const [formBlogAuthor, setFormBlogAuthor] = useState(author);
+
+    // const formBlogTitle = useRef()
+    // const formBlogBody = useRef()
+    // const formBlogAuthor = useRef()
 
     return (
         <div className="custom-form">
@@ -14,25 +19,24 @@ const BlogForm = ({ title = "", body = "", author = "", submitHandler, method, i
                 <label>Blog title:</label>
                 <input
                     required
-                    ref={formBlogTitle}
-                    defaultValue={title}
-                // onChange={(e) => setTitle(e.target.value)}
+                    // ref={formBlogTitle}
+                    defaultValue={formBlogTitle}
+                    onChange={(e) => setFormBlogTitle(e.target.value)}
 
                 />
                 <label>Blog body:</label>
                 <textarea
                     required
-                    ref={formBlogBody}
-                    defaultValue={body}
-                // value={body}
-                // onChange={(e) => setBody(e.target.value)}
+                    // ref={formBlogBody}
+                    value={formBlogBody}
+                    onChange={(e) => setFormBlogBody(e.target.value)}
                 />
                 <label>Blog author:</label>
                 <select
                     defaultValue={author}
-                    ref={formBlogAuthor}
-                // value={author}
-                // onChange={(e) => setAuthor(e.target.value)}
+                    // ref={formBlogAuthor}
+                    value={formBlogAuthor}
+                    onChange={(e) => setFormBlogAuthor(e.target.value)}
                 >
                     <option value="mario">mario</option>
                     <option value="yoshi">yoshi</option>

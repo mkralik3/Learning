@@ -17,7 +17,7 @@ const Update = () => {
 
     const handleSubmit = async (e, formBlogTitle, formBlogBody, formBlogAuthor) => {
         e.preventDefault()
-        const updatedBlog = { title: formBlogTitle.current.value, body: formBlogBody.current.value, author: formBlogAuthor.current.value, id: blog.id }
+        const updatedBlog = { title: formBlogTitle, body: formBlogBody, author: formBlogAuthor, id: blog.id }
         await executeFetch({
             method: 'PUT',
             headers: { "Content-Type": "application/json" },

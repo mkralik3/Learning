@@ -10,7 +10,7 @@ const Create = () => {
 
     const handleSubmit = async (e, formBlogTitle, formBlogBody, formBlogAuthor) => {
         e.preventDefault()
-        const blog = { title: formBlogTitle.current.value, body: formBlogBody.current.value, author: formBlogAuthor.current.value }
+        const blog = { title: formBlogTitle, body: formBlogBody, author: formBlogAuthor}
         await executeFetch({
             method: 'POST',
             headers: { "Content-Type": "application/json" },
