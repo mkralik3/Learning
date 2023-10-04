@@ -25,7 +25,7 @@ func (a *App) loadRoutes() {
 
 func (a *App) loadOrderRoutes(router chi.Router) {
 	orderHandler := &handler.Order{
-		Repo: &order.RedisRepo{
+		Repo: &order.RedisRepo{ //TODO try to create and use psql implementation of repo
 			Client: a.rdb,
 		},
 	}

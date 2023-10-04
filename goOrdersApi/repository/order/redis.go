@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/mkralik3/Learning/goOrdersApi/model"
+	"github.com/mkralik3/Learning/goOrdersApi/handler"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -44,14 +45,13 @@ func (r *RedisRepo) Insert(ctx context.Context, order model.Order) error {
 	return nil
 }
 
-var ErrNotExist = errors.New("order does not exist")
 
 func (r *RedisRepo) FindById(ctx context.Context, id uint64) (model.Order, error) {
 	key := orderIDKey(id)
 
 	value, err := r.Client.Get(ctx, key).Result()
 	if errors.Is(err, redis.Nil) {
-		return model.Order{}, ErrNotExist
+		return model.Order{}, handler.ErrNotExist
 	} else if err != nil {
 		return model.Order{}, fmt.Errorf("get order error: %w", err)
 	}
@@ -73,7 +73,7 @@ func (r *RedisRepo) DeleteById(ctx context.Context, id uint64) error {
 	err := tx.Del(ctx, key).Err()
 	if errors.Is(err, redis.Nil) {
 		tx.Discard()
-		return ErrNotExist
+		return handler.ErrNotExist
 	} else if err != nil {
 		tx.Discard()
 		return fmt.Errorf("delete order error: %w", err)
@@ -100,41 +100,31 @@ func (r *RedisRepo) Update(ctx context.Context, order model.Order) error {
 
 	err = r.Client.SetXX(ctx, key, string(data), 0).Err()
 	if errors.Is(err, redis.Nil) {
-		return ErrNotExist
+		return handler.ErrNotExist
 	} else if err != nil {
 		return fmt.Errorf("update order error: %w", err)
 	}
 	return nil
 }
 
-type FindAllPage struct {
-	Size   uint64
-	Offset uint64
-}
-
-type FindResult struct {
-	Orders []model.Order
-	Cursor uint64
-}
-
-func (r *RedisRepo) FindAll(ctx context.Context, page FindAllPage) (FindResult, error) {
+func (r *RedisRepo) FindAll(ctx context.Context, page handler.FindAllPage) (handler.FindResult, error) {
 	res := r.Client.SScan(ctx, "orders", page.Offset, "*", int64(page.Size))
 		
 	keys, cursor, err := res.Result()
 
 	if err != nil {
-		return FindResult{}, fmt.Errorf("failed to get order ids: %w", err)
+		return handler.FindResult{}, fmt.Errorf("failed to get order ids: %w", err)
 	}
 
 	if len(keys) == 0 {
-		return FindResult{
+		return handler.FindResult{
 			Orders: []model.Order{},
 		}, nil
 	}
 
 	xs, err := r.Client.MGet(ctx, keys...).Result()
 	if err != nil {
-		return FindResult{}, fmt.Errorf("failed to get orders: %w", err)
+		return handler.FindResult{}, fmt.Errorf("failed to get orders: %w", err)
 	}
 
 	fmt.Printf("[debug] mkralik, len: %d \n", len(xs))
@@ -147,13 +137,13 @@ func (r *RedisRepo) FindAll(ctx context.Context, page FindAllPage) (FindResult, 
 
 		err := json.Unmarshal([]byte(x), &order)
 		if err != nil {
-			return FindResult{}, fmt.Errorf("failed to decode order json: %w", err)
+			return handler.FindResult{}, fmt.Errorf("failed to decode order json: %w", err)
 		}
 
 		orders[i] = order
 	}
 
-	return FindResult{
+	return handler.FindResult{
 		Orders: orders,
 		Cursor: cursor,
 	}, nil

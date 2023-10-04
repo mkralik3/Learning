@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,11 +13,30 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/mkralik3/Learning/goOrdersApi/model"
-	"github.com/mkralik3/Learning/goOrdersApi/repository/order"
 )
 
+var ErrNotExist = errors.New("order does not exist")
+
+type FindAllPage struct {
+	Size   uint64
+	Offset uint64
+}
+
+type FindResult struct {
+	Orders []model.Order
+	Cursor uint64
+}
+
+type Repo interface {
+	Insert(ctx context.Context, order model.Order) error
+	FindById(ctx context.Context, id uint64) (model.Order, error)
+	DeleteById(ctx context.Context, id uint64) error
+	Update(ctx context.Context, order model.Order) error
+	FindAll(ctx context.Context, page FindAllPage) (FindResult, error)
+}
+
 type Order struct {
-	Repo *order.RedisRepo
+	Repo Repo
 }
 
 func (o *Order) Create(w http.ResponseWriter, r *http.Request) {
@@ -70,7 +90,7 @@ func (o *Order) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	const size = 50
-	res, err := o.Repo.FindAll(r.Context(), order.FindAllPage{
+	res, err := o.Repo.FindAll(r.Context(), FindAllPage{
 		Offset: cursor,
 		Size: size,
 	})
@@ -109,7 +129,7 @@ func (o *Order) GetById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ob, err := o.Repo.FindById(r.Context(), orderID)
-	if errors.Is(err, order.ErrNotExist) {
+	if errors.Is(err, ErrNotExist) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	} else if err != nil {
@@ -146,7 +166,7 @@ func (o *Order) UpdateById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	theOrder, err := o.Repo.FindById(r.Context(), orderID)
-	if errors.Is(err, order.ErrNotExist) {
+	if errors.Is(err, ErrNotExist) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	} else if err != nil {
@@ -203,7 +223,7 @@ func (o *Order) DeleteById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = o.Repo.DeleteById(r.Context(), orderID)
-	if errors.Is(err, order.ErrNotExist) {
+	if errors.Is(err, ErrNotExist) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	} else if err != nil {
